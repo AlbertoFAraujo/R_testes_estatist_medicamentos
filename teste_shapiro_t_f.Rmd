@@ -7,7 +7,7 @@ date: "2024-05-07"
 
 ### Sobre o dataset "Sleep"
 
-Esse dataset é o resultado de um tarbalho de pesquisa com pacientes que possuem dificuldades para dormir. Os pacientes foram separados em 2 grupos e cada grupo recebeu um medicamento diferente para tratar os distúrbios no sono e ajudar a aumentar o tempo dormindo.
+Esse dataset é o resultado de um trabalho de pesquisa com pacientes que possuem dificuldades para dormir. Os pacientes foram separados em 2 grupos e cada grupo recebeu um medicamento diferente para tratar os distúrbios no sono e ajudar a aumentar o tempo dormindo.
 
 Variáveis:
 
@@ -21,9 +21,9 @@ Variáveis:
 
 #### Objetivo:
 
-Existe diferença significativa na média de sono dos 2 grupos de pacientes, ou seja, há diferença significativa entre os dois medicamentos que ajudam no distúrbio do sono?
+Verificar se há diferença significativa entre os dois medicamentos que ajudam no distúrbio do sono
 
-Como há duas amostras (dois grupos), podemos aplicar o Test t para responder à pergunta. Mas para aplicar o Teste t, precisamos validar suas suposições e para isso precisamos do Teste de Shapiro-Wilk e do Teste F.
+Como há duas amostras (dois grupos), podemos aplicar o Test t de Student para responder à pergunta. Mas para aplicar o Teste t, precisamos validar suas suposições e para isso precisamos do Teste de Shapiro-Wilk e do Teste F de Snedecor.
 
 Definimos assim as hipóteses para nosso teste:
 
