@@ -8,15 +8,15 @@ df_sleep
 ```
 
 ```{r}
-
+library(skimr)
 ```
 
 ```{r}
-
+skim(df_sleep)
 ```
 
 ```{r}
-
+plot(df_sleep$extra)
 ```
 
 ```{r}
