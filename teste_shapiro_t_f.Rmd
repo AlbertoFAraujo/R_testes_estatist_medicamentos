@@ -1,6 +1,8 @@
 ---
-title: "R Notebook"
+title: "Análise de medicamento com testes estatísticos T de Student, f de Snedecor e Shapiro-Wilk"
 output: html_notebook
+author: "Alberto Araujo"
+date: "2024-05-07"
 ---
 
 ### Sobre o dataset "Sleep"
@@ -17,7 +19,7 @@ Variáveis:
 
 ------------------------------------------------------------------------
 
-#### Objetivo: 
+#### Objetivo:
 
 Existe diferença significativa na média de sono dos 2 grupos de pacientes, ou seja, há diferença significativa entre os dois medicamentos que ajudam no distúrbio do sono?
 
@@ -39,7 +41,7 @@ Para validar o Teste t, iremos validar 5 suposições do Teste:
 4.  Os resíduos do modelo são normalmente distribuídos;
 5.  A variância residual é homogênia (princípio da homocedastidade)
 
-\*Consideraremos como verdadeiras as suposições de 1 a 3 e validaremos as suposições 4 e 5. Para a suposição 4 usaremos o teste de Shapiro-Wilk (verificar se a amostra segue ou não uma distribuição normal) e para a suposição 5 o teste F (se há diferença significativa nas variâncias das médias)
+*Consideraremos como verdadeiras as suposições de 1 a 3 e validaremos as suposições 4 e 5. Para a suposição 4 usaremos o teste de Shapiro-Wilk (verificar se a amostra segue ou não uma distribuição normal) e para a suposição 5 o teste F (se há diferença significativa nas variâncias das médias)*
 
 ------------------------------------------------------------------------
 
@@ -56,44 +58,106 @@ for (lib in libs) {
 
 ```{r}
 # Visualizando o dataset 
-head(df_sleep)
+head(sleep)
 ```
 
 ```{r}
 # Extraindo dados de um dos grupos
-grupo_um <- df_sleep$group == 1
+grupo_um <- sleep$group == 1
 ```
 
 ```{r}
 # Visualização gráfica do grupo UM
-qqPlot(df_sleep$extra[grupo_um])
+qqPlot(sleep$extra[grupo_um])
 ```
 
 ```{r}
 # Visualização gráfica do grupo DOIS
-qqPlot(df_sleep$extra[!grupo_um])
+qqPlot(sleep$extra[!grupo_um])
+```
+
+Os pontos da variável "extra" estão localizados dentro da área de confiança, indicando que os dados seguem uma distribuição normal.
+
+------------------------------------------------------------------------
+
+*Validando a suposição 4 (Teste de Shapiro-Wilk)*
+
+"Os resíduos do modelo são normalmente distribuídos"
+
+*Suposição: Falsa"*
+
+Para dizer que uma distribuição é normal, o valor-p precisa ser maior que 0.05
+
+*Hipóteses:*
+
+-   H0 = Os dados seguem uma distribuição normal
+
+-   H1 = Os dados não seguem uma distribuição normal
+
+```{r}
+shapiro.test(sleep$extra[grupo_um])
+shapiro.test(sleep$extra[!grupo_um])
+```
+
+Como p-value = 0.4 \> 0.05 para ambos os grupos, então falhamos em rejeitar a H0. Portanto, podemos assumir que os dados seguem uma distribuição normal.
+
+Não há significância estatística para rejeitar H0. Não pode-se dizer que aceitamos H0, não tem como afirmar categoricamente que H0 é verdadeira. Pra isso precisamos realizar outros testes estatísticas. Neste caso, vamos considerar que H0 pode ser validada, ou seja, que H0 segue uma distribuição normal.
+
+Nossa hipótese H0 afirmava que os dados são distribuídos normalmente, porém inicialmente aplicamos a suposição em ser FALSA. Ou seja, pra isso o nosso teste estatístico aplicado deveria apresentar evidências significativas para comprovar isso com valor-p \< 0.05. Como o resultado apresentou ser maior, portanto, concluímos que que não podemos rejeitar o H0, logo segue uma distribuição normal.
+
+------------------------------------------------------------------------
+
+*Validando a suposição 5 (Teste F de Snedecor)*
+
+"A variância residual é homogênia (princípio da homocedastidade)"
+
+*Suposição: Falsa"*
+
+*Teste F: Verifica se a média das amostras tem a mesma variância (ou que não há diferença significativa nas variâncias das médias)*
+
+*Hipóteses:*
+
+-   H0: As médias de dados extraídos de uma população normalmente distribuídas tem a mesma variância;
+
+-   H1: As médias de dados extraídos de uma população normalmente distribuídas NÃO tem a mesma variância.
+
+Na validação da suposição 4 já identificamos que os dados estão normalmente distribuídos.
+
+```{r}
+# Verificando se há valores ausentes
+colSums(is.na(sleep))
 ```
 
 ```{r}
-
+# Analisando as estatísticas
+dt <- data.table::data.table(sleep)
+dt[,.(Total = .N, Media = mean(extra), Sd = sd(extra)), by = group]
 ```
 
 ```{r}
-
+# Aplicando o teste F
+teste_f <- var.test(extra ~ group, data = sleep)
+teste_f
 ```
+
+valor-p \> 0.05. Portanto, falhamos em reiejtar H0, não há diferença significativa entre as médias dos dois grupos. Portanto, as médias possuem a mesma variância.
+
+------------------------------------------------------------------------
+
+Todas as suposições foram validadas com sucesso! Portanto, podemos aplicar o Teste T- Student
+
+*Teste t: Usado para comparar a média de dois grupos*
+
+*Hipóteses*
+
+-   H0 (Hipótese nula): Não há diferença significativa entre as médias dos 2 grupos.
 
 ```{r}
-
+# Aplicando o Teste T
+teste_t <- t.test(extra ~ group, data = sleep, 
+                  var.equal = TRUE) 
+teste_t
+# VAR.QUAL = TRUE, pois realizamos a validação com o teste F já, anteriormente.
 ```
 
-```{r}
-
-```
-
-```{r}
-
-```
-
-```{r}
-
-```
+valor-p = 0.08 \> 0.05. Portanto, falhamos em rejeitar a H0! Ou, podemos concluir que os 2 grupos não tem diferença significativa entre os medicamentos aplicados para tratar distúrbios de sono.
