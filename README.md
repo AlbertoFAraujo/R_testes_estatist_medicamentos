@@ -1,266 +1,171 @@
-![image](https://github.com/AlbertoFAraujo/R_MongoDB_R_airbnb/assets/105552990/f88f67b4-373f-41a1-ac46-b21ec3137c97)
+![image](https://github.com/AlbertoFAraujo/Teste_Shapiro_t_f/assets/105552990/57876723-7b94-4570-a87e-8b0a7d9c5046)
 
 ### Tecnologias utilizadas: 
-| [<img align="center" alt="R_studio" height="60" width="60" src="https://github.com/AlbertoFAraujo/R_Petrobras/assets/105552990/02dff6df-07be-43dc-8b35-21d06eabf9e1">](https://posit.co/download/rstudio-desktop/) | [<img align="center" alt="ggplot" height="60" width="60" src="https://github.com/AlbertoFAraujo/R_Petrobras/assets/105552990/db55b001-0d4c-42eb-beb2-5131151c7114">](https://plotly.com/r/) | [<img align="center" alt="plotly" height="60" width="60" src="https://github.com/AlbertoFAraujo/R_Petrobras/assets/105552990/5f681062-c399-44af-a658-23e94b8b656f">](https://plotly.com/r/) | [<img align="center" alt="mongodb" height="60" width="60" src="https://github.com/AlbertoFAraujo/R_MongoDB_R_airbnb/assets/105552990/e0104b01-1696-45a3-9ae6-4769dd898722">](https://www.mongodb.com/docs/) | [<img align="center" alt="devtools" height="60" width="60" src="https://github.com/AlbertoFAraujo/R_MongoDB_R_airbnb/assets/105552990/d8377fe5-aade-4bbd-8331-812901e2d8c1">](https://www.rdocumentation.org/packages/devtools/versions/2.4.5) |
-|:---:|:---:|:---:|:---:|:---:|
-| R Studio | Ggplot2 | Plotly | MongoDB | Devtools |
+| [<img align="center" alt="R_studio" height="60" width="60" src="https://github.com/AlbertoFAraujo/R_Petrobras/assets/105552990/02dff6df-07be-43dc-8b35-21d06eabf9e1">](https://posit.co/download/rstudio-desktop/) |
+|:---:|
+| R Studio |
 
 - **RStudio:** Ambiente integrado para desenvolvimento em R, oferecendo ferramentas para escrita, execução e depuração de código.
-- **Ggplot2:** Pacote para criação de visualizações de dados elegantes e flexíveis em R.
-- **Plotly:** Biblioteca interativa para criação de gráficos e visualizações em diversas linguagens.
-- **MongoDB:** Um banco de dados NoSQL de alta performance, orientado a documentos, projetado para escalabilidade e flexibilidade.
-- **Devtools:** Conjunto de ferramentas e utilitários para desenvolvedores, incluindo bibliotecas, frameworks, ambientes de desenvolvimento integrado (IDEs) e outros recursos para facilitar o desenvolvimento de software.
 <hr>
 
-### Objetivo: 
+### Sobre o dataset "Sleep"
 
-Integrar os dados de uma base contida no banco de dados MongoDB e realizar um Map Reduce somente com as funções nativas do mongo para identicar as seguintes questões:
+Esse dataset é o resultado de um trabalho de pesquisa com pacientes que possuem dificuldades para dormir. Os pacientes foram separados em 2 grupos e cada grupo recebeu um medicamento diferente para tratar os distúrbios no sono e ajudar a aumentar o tempo dormindo.
 
-1.  Total do número de avaliações dos quartos? E por faixa?
-2.  Quantas propriedades possuem acomodações acima de 2?
-3.  Quantas propriedades não aceitam nenhuma pessoa extra?
+Variáveis:
 
-Base de dados: <https://insideairbnb.com/get-the-data/>
-<hr>
+-   *extra*: Variável numérica que indica quantas horas a mais ou a menos o paciente dormiu após receber o medicamento. Será a nossa variável dependente;
 
-### Script R: 
-```r
-# Ajustar as casas decimais
-options(scipen = 999, digits = 4)
+-   *group*: Variável do tipo fator (categórica) que indica que o medicamento usado pelo paciente (1 ou 2). Está será a nossa variável independente;
 
-# Definir um espelho de CRAN
-options(repos = "http://cran.rstudio.com/")
+-   *ID*: Identificação do paciente.
+
+------------------------------------------------------------------------
+
+#### Objetivo:
+
+Verificar se há diferença significativa entre os dois medicamentos que ajudam no distúrbio do sono
+
+Como há duas amostras (dois grupos), podemos aplicar o Test t de Student para responder à pergunta. Mas para aplicar o Teste t, precisamos validar suas suposições e para isso precisamos do Teste de Shapiro-Wilk e do Teste F de Snedecor.
+
+Definimos assim as hipóteses para nosso teste:
+
+-   H0 (Hipótese Nula): Não há diferença significativa entre as médias dos 2 grupos;
+
+-   H1 (Hipótese alternativa): Há diferença significativa entre as médias dos 2 grupos.
+
+------------------------------------------------------------------------
+
+Para validar o Teste t, iremos validar 5 suposições do Teste:
+
+1.  Os dados são aleatórios e e representativos da população;
+2.  A variável dependente é contínua;
+3.  Ambos os grupos são independentes (ou seja, grupos exaustivos e excludentes);
+4.  Os resíduos do modelo são normalmente distribuídos;
+5.  A variância residual é homogênia (princípio da homocedastidade)
+
+*Consideraremos como verdadeiras as suposições de 1 a 3 e validaremos as suposições 4 e 5. Para a suposição 4 usaremos o teste de Shapiro-Wilk (verificar se a amostra segue ou não uma distribuição normal) e para a suposição 5 o teste F (se há diferença significativa nas variâncias das médias)*
+
+------------------------------------------------------------------------
+
+### Análise dos dados
+
+```R
+# Importação das bibliotecas
+libs <- c('car','tidyverse','qqplotr')
+
+for (lib in libs) {
+  if(!require(lib)) install.packages(lib)
+}
 ```
-```r
-# Instalando os pacores necessários
-utils::install.packages("devtools")
-install.packages("mongolite")
-install.packages("plotly")
+
+```R
+# Visualizando o dataset 
+head(sleep)
 ```
 
-```r
-# Carregando as bibliotecas
-library(devtools)
-library(mongolite)
-library(ggplot2)
-library(dplyr)
-library(plotly)
+```R
+# Extraindo dados de um dos grupos
+grupo_um <- sleep$group == 1
 ```
-```r
-# Criando a conexão com banco de dados
 
-con <- mongolite::mongo(
-  collection = 'airbnb',
-  db = 'dbairbnb',
-  url = 'mongodb://localhost:27017',
-  verbose = FALSE,
-  options = ssl_options()
-)
+```R
+# Visualização gráfica do grupo UM
+qqPlot(sleep$extra[grupo_um])
 ```
-```r
-# Visualizar a conexão
-print(con)
+
+![image](https://github.com/AlbertoFAraujo/Teste_Shapiro_t_f/assets/105552990/014a1d2e-90ec-44a7-a5ac-e09a8a726a61)
+
+
+```R
+# Visualização gráfica do grupo DOIS
+qqPlot(sleep$extra[!grupo_um])
 ```
-```r
-# Visualizar os dados
-dados <- con$find()
-head(dados,1)
+
+![image](https://github.com/AlbertoFAraujo/Teste_Shapiro_t_f/assets/105552990/f081cfc0-cf6f-404b-b2c5-c521bccca9f4)
+
+Os pontos da variável "extra" estão localizados dentro da área de confiança, indicando que os dados seguem uma distribuição normal.
+
+------------------------------------------------------------------------
+
+### Validando a suposição 4 (Teste de Shapiro-Wilk)
+
+"Os resíduos do modelo são normalmente distribuídos"
+
+*Suposição: Falsa"*
+
+Para dizer que uma distribuição é normal, o valor-p precisa ser maior que 0.05
+
+*Hipóteses:*
+
+-   H0 = Os dados seguem uma distribuição normal
+
+-   H1 = Os dados não seguem uma distribuição normal
+
+```R
+shapiro.test(sleep$extra[grupo_um])
+shapiro.test(sleep$extra[!grupo_um])
 ```
-```r
-# Verifica o número de registros
-con$count('{}')
+
+Como p-value = 0.4 \> 0.05 para ambos os grupos, então falhamos em rejeitar a H0. Portanto, podemos assumir que os dados seguem uma distribuição normal.
+
+Não há significância estatística para rejeitar H0. Não pode-se dizer que aceitamos H0, não tem como afirmar categoricamente que H0 é verdadeira. Pra isso precisamos realizar outros testes estatísticas. Neste caso, vamos considerar que H0 pode ser validada, ou seja, que H0 segue uma distribuição normal.
+
+Nossa hipótese H0 afirmava que os dados são distribuídos normalmente, porém inicialmente aplicamos a suposição em ser FALSA. Ou seja, pra isso o nosso teste estatístico aplicado deveria apresentar evidências significativas para comprovar isso com valor-p \< 0.05. Como o resultado apresentou ser maior, portanto, concluímos que que não podemos rejeitar o H0, logo segue uma distribuição normal.
+
+------------------------------------------------------------------------
+
+### Validando a suposição 5 (Teste F de Snedecor)
+
+"A variância residual é homogênia (princípio da homocedastidade)"
+
+*Suposição: Falsa"*
+
+*Teste F: Verifica se a média das amostras tem a mesma variância (ou que não há diferença significativa nas variâncias das médias)*
+
+*Hipóteses:*
+
+-   H0: As médias de dados extraídos de uma população normalmente distribuídas tem a mesma variância;
+
+-   H1: As médias de dados extraídos de uma população normalmente distribuídas NÃO tem a mesma variância.
+
+Na validação da suposição 4 já identificamos que os dados estão normalmente distribuídos.
+
+```R
+# Verificando se há valores ausentes
+colSums(is.na(sleep))
 ```
-[1] 5555
 
-```r
-# Verificando o nome das variáveis (colunas)
-names(dados)
+```R
+# Analisando as estatísticas
+dt <- data.table::data.table(sleep)
+dt[,.(Total = .N, Media = mean(extra), Sd = sd(extra)), by = group]
 ```
-| Número | Variável                | Número | Variável                | Número | Variável                | Número | Variável                |
-|--------|-------------------------|--------|-------------------------|--------|-------------------------|--------|-------------------------|
-| [1]    | listing_url             | [11]   | house_rules             | [21]   | last_review             | [31]   | extra_people            |
-| [2]    | name                    | [12]   | property_type           | [22]   | accommodates            | [32]   | guests_included         |
-| [3]    | summary                 | [13]   | room_type               | [23]   | bedrooms                | [33]   | images                  |
-| [4]    | space                   | [14]   | bed_type                | [24]   | beds                    | [34]   | host                    |
-| [5]    | description             | [15]   | minimum_nights          | [25]   | number_of_reviews       | [35]   | address                 |
-| [6]    | neighborhood_overview   | [16]   | maximum_nights          | [26]   | bathrooms               | [36]   | availability            |
-| [7]    | notes                   | [17]   | cancellation_policy     | [27]   | amenities               | [37]   | review_scores           |
-| [8]    | transit                 | [18]   | last_scraped            | [28]   | price                   | [38]   | reviews                 |
-| [9]    | access                  | [19]   | calendar_last_scraped   | [29]   | security_deposit        | [39]   | weekly_price            |
-| [10]   | interaction             | [20]   | first_review            | [30]   | cleaning_fee            | [40]   | monthly_price           |
-|        |                         |        |                         |        |                         | [41]   | reviews_per_month       |
-```r
-# Filtrando por query e fields no mongo
-filtro <- con$find(
-  query = '{"property_type":"House"}',
-  fields = '{"name": true,"maximum_nights": true, "price": true, "_id": false}',
-  sort = '{"price": -1}' # ordenar desc
-)
-head(filtro)
+
+```R
+# Aplicando o teste F
+teste_f <- var.test(extra ~ group, data = sleep)
+teste_f
 ```
-| Número | name                                              | Número | maximum_nights | Número | price |
-|--------|---------------------------------------------------|--------|----------------|--------|-------|
-| [1]    | Stunning Waterfront Marina bay house in Sai Kung | [1]    | 1125           | [1]    | 7002  |
-| [2]    | Barra da Tijuca beach house                      | [2]    | 1125           | [2]    | 5595  |
-| [3]    | Casa MARAVILHOSA, 5 suites OLIMPIADAS RIO 2016   | [3]    | 60             | [3]    | 5595  |
-| [4]    | LUXURY HOUSE IN BARRA DA TIJUCA                  | [4]    | 180            | [4]    | 5502  |
-| [5]    | 鮀城小家-感受不一样的异地之旅                        | [5]    | 2              | [5]    | 4828  |
-| [6]    | IPANEMA, Rio de Janeiro, Brasil                  | [6]    | 1125           | [6]    | 3730  |
 
-```r
-# Contagem do número de visualizações dos quartos
-resultado2 <- con$mapreduce(
-  map = "function(){
-          emit(Math.floor(this.number_of_reviews), 1)
-        }",
-  reduce = "function(id, counts){
-          return Array.sum(counts)
-          }"
-)
+valor-p \> 0.05. Portanto, falhamos em reiejtar H0, não há diferença significativa entre as médias dos dois grupos. Portanto, as médias possuem a mesma variância.
 
-names(resultado2) <- c('numero_reviews','contagem')
+------------------------------------------------------------------------
+
+Todas as suposições foram validadas com sucesso! Portanto, podemos aplicar o Teste T- Student
+
+*Teste t: Usado para comparar a média de dois grupos*
+
+*Hipóteses*
+
+-   H0 (Hipótese nula): Não há diferença significativa entre as médias dos 2 grupos.
+
+```R
+# Aplicando o Teste T
+teste_t <- t.test(extra ~ group, data = sleep, 
+                  var.equal = TRUE) 
+teste_t
+# VAR.QUAL = TRUE, pois realizamos a validação com o teste F já, anteriormente.
 ```
-```r
-# Gerando o gráfico do número de visualizações por propriedades
-fig <- plot_ly(resultado2, x = ~numero_reviews, y = ~contagem, type = 'bar',
-        marker = list(color = 'rgb(158,202,225)',
-                      line = list(color = 'rgb(8,48,107)',
-                                  width = 1.5)))
-fig <- fig %>% layout(title = "Número de avaliações por propriedadades",
-         xaxis = list(title = "Total de Visualizações"),
-         yaxis = list(title = "Contagem total"))
-fig
-```
-![1](https://github.com/AlbertoFAraujo/R_MongoDB_R_airbnb/assets/105552990/a5f69278-853b-42a1-98be-afa69bfcf856)
 
-- 1388 propriedades não obtiveram nenhuma visualização;
-- 511 propriedades obtiveram pelo menos 1 visualização;
-- 329 propriedades obtiveram pelo menos 2 visualizações.
-
-```r
-# Número de visualizações por faixa
-resultado3 <- con$mapreduce(
-  map = "function(){
-            emit(Math.floor(this.number_of_reviews/100) * 100, 1)
-            }",
-  reduce = "function(id, counts){
-    return Array.sum(counts)
-  }"
-)
-
-names(resultado3) <- c('numero_reviews','contagem')
-```
-```r
-# Gerando o gráfico do número de visualizações por propriedades por faixa
-
-fig <- plot_ly(resultado3, x = ~numero_reviews, y = ~contagem, type = 'bar',
-        marker = list(color = 'rgb(158,202,225)',
-                      line = list(color = 'rgb(8,48,107)',
-                                  width = 1.5)))
-fig <- fig %>% layout(title = "Número de visualizazções por faixa",
-         xaxis = list(title = "Faixa de visualizações"),
-         yaxis = list(title = "Contagem Total"))
-
-fig
-```
-![2](https://github.com/AlbertoFAraujo/R_MongoDB_R_airbnb/assets/105552990/494e59a6-03f2-4826-81ea-b955e95c2ade)
-
-**Resumo da análise:**
-
--   5105 propriedades obtiveram entre 0 e 100 visualizações;
--   351 propriedades obtiveram entre 100 e 200 visualizações;
--   80 propriedades obtiveram entre 200 e 300 visualizações;
--   13 propriedades obtiveram entre 300 e 400 visualizações;
--   5 propriedades obtiveram entre 400 e 500 visualizações;
--   1 propriedade obteve 500 ou mais visualizações.
-
-```r
-# Quantas propriedades possuem o maior número de quartos? E a segunda maior?
-
-resultado4 <- con$mapreduce(
-  map = "function(){
-          if (this.accommodates <= 100){
-            emit(Math.floor(this.accommodates), 1)
-          }
-        }",
-  reduce = "function(id, counts){
-          return Array.sum(counts);
-          }"
-)
-
-names(resultado4) <- c('numero_acomodações','contagem')
-resultado4 <- resultado4[order(resultado4$numero_acomodações),]
-resultado4
-```
-| Numero_acomodações | Contagem |
-|--------------------|----------|
-| 8                  | 1        |
-| 15                 | 2        |
-| 14                 | 3        |
-| 7                  | 4        |
-| 5                  | 5        |
-| 1                  | 6        |
-| 3                  | 7        |
-| 9                  | 8        |
-| 2                  | 9        |
-| 11                 | 10       |
-| 6                  | 11       |
-| 12                 | 12       |
-| 16                 | 13       |
-| 10                 | 14       |
-| 13                 | 15       |
-| 4                  | 16       |
-
-```r
-# Plotagem das propriedades com maiores números de quartos
-plot1 <- resultado4 %>% 
-  plot_ly(
-    x = ~numero_acomodações,
-    y = ~contagem,
-    type = 'bar',
-    text = ~contagem,
-    textposition = 'auto',
-    marker = list(color = 'rgb(158, 202, 225)',
-                  line = list(color = 'rgb(8, 48, 107)',
-                              width = 1.5)
-                  )
-  ) %>% 
-  layout(title = "Propriedades menos de 5 quartos",
-         xaxis = list(title = "Número de quartos"),
-         yaxis = list(title = "Total por número de quartos")
-         )
-
-plot1
-```
-![3](https://github.com/AlbertoFAraujo/R_MongoDB_R_airbnb/assets/105552990/19e51dc1-b1ca-4beb-a25a-faa6facf6f9d)
-
-2052 propriedades possuem 2 quartos e 1154 propriedades possuem 4 quartos, sendo a predominância do número de quartos
-
-```r
-# Quantas propriedades não aceita nenhuma pessoa extra?
-
-resultado5 <- con$mapreduce(
-  map = "function(){
-            if (this.extra_people != 0){
-              emit(this.extra_people, 1)
-            }
-        }",
-  reduce = "function(id, counts){
-          return Array.sum(counts);
-          }"
-)
-
-names(resultado5) <- c('pessoas_extras','contagem')
-resultado5 <- resultado5[order(resultado5$pessoas_extras),]
-head(resultado5)
-```
-| Pessoas_extras | Contagem |
-|----------------|----------|
-| 32             | 0        |
-| 115            | 4        |
-| 43             | 5        |
-| 37             | 6        |
-| 39             | 7        |
-| 41             | 8        |
-
-3135 das propriedades listadas não aceitam pessoas extras.
+valor-p = 0.08 \> 0.05. Portanto, falhamos em rejeitar a H0! Ou, podemos concluir que os 2 grupos não tem diferença significativa entre os medicamentos aplicados para tratar distúrbios de sono.
