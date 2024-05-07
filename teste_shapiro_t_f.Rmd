@@ -3,20 +3,79 @@ title: "R Notebook"
 output: html_notebook
 ---
 
-```{r}
-df_sleep
+### Sobre o dataset "Sleep"
+
+Esse dataset é o resultado de um tarbalho de pesquisa com pacientes que possuem dificuldades para dormir. Os pacientes foram separados em 2 grupos e cada grupo recebeu um medicamento diferente para tratar os distúrbios no sono e ajudar a aumentar o tempo dormindo.
+
+Variáveis:
+
+-   *extra*: Variável numérica que indica quantas horas a mais ou a menos o paciente dormiu após receber o medicamento. Será a nossa variável dependente;
+
+-   *group*: Variável do tipo fator (categórica) que indica que o medicamento usado pelo paciente (1 ou 2). Está será a nossa variável independente;
+
+-   *ID*: Identificação do paciente.
+
+------------------------------------------------------------------------
+
+#### Objetivo: 
+
+Existe diferença significativa na média de sono dos 2 grupos de pacientes, ou seja, há diferença significativa entre os dois medicamentos que ajudam no distúrbio do sono?
+
+Como há duas amostras (dois grupos), podemos aplicar o Test t para responder à pergunta. Mas para aplicar o Teste t, precisamos validar suas suposições e para isso precisamos do Teste de Shapiro-Wilk e do Teste F.
+
+Definimos assim as hipóteses para nosso teste:
+
+-   H0 (Hipótese Nula): Não há diferença significativa entre as médias dos 2 grupos;
+
+-   H1 (Hipótese alternativa): Há diferença significativa entre as médias dos 2 grupos.
+
+------------------------------------------------------------------------
+
+Para validar o Teste t, iremos validar 5 suposições do Teste:
+
+1.  Os dados são aleatórios e e representativos da população;
+2.  A variável dependente é contínua;
+3.  Ambos os grupos são independentes (ou seja, grupos exaustivos e excludentes);
+4.  Os resíduos do modelo são normalmente distribuídos;
+5.  A variância residual é homogênia (princípio da homocedastidade)
+
+\*Consideraremos como verdadeiras as suposições de 1 a 3 e validaremos as suposições 4 e 5. Para a suposição 4 usaremos o teste de Shapiro-Wilk (verificar se a amostra segue ou não uma distribuição normal) e para a suposição 5 o teste F (se há diferença significativa nas variâncias das médias)
+
+------------------------------------------------------------------------
+
+### Análise dos dados
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# Importação das bibliotecas
+libs <- c('car','tidyverse','qqplotr')
+
+for (lib in libs) {
+  if(!require(lib)) install.packages(lib)
+}
 ```
 
 ```{r}
-library(skimr)
+# Visualizando o dataset 
+head(df_sleep)
 ```
 
 ```{r}
-skim(df_sleep)
+# Extraindo dados de um dos grupos
+grupo_um <- df_sleep$group == 1
 ```
 
 ```{r}
-plot(df_sleep$extra)
+# Visualização gráfica do grupo UM
+qqPlot(df_sleep$extra[grupo_um])
+```
+
+```{r}
+# Visualização gráfica do grupo DOIS
+qqPlot(df_sleep$extra[!grupo_um])
+```
+
+```{r}
+
 ```
 
 ```{r}
