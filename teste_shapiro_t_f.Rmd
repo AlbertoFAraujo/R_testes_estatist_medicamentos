@@ -68,12 +68,12 @@ grupo_um <- sleep$group == 1
 
 ```{r}
 # Visualização gráfica do grupo UM
-qqPlot(sleep$extra[grupo_um])
+qqPlot(sleep$extra[grupo_um], main = 'Grupo 01')
 ```
 
 ```{r}
 # Visualização gráfica do grupo DOIS
-qqPlot(sleep$extra[!grupo_um])
+qqPlot(sleep$extra[!grupo_um], main = 'Grupo 02')
 ```
 
 Os pontos da variável "extra" estão localizados dentro da área de confiança, indicando que os dados seguem uma distribuição normal.
