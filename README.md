@@ -63,6 +63,15 @@ for (lib in libs) {
 # Visualizando o dataset 
 head(sleep)
 ```
+| extra | group | ID |
+|-------|-------|----|
+|  0.7  |   1   |  1 |
+| -1.6  |   1   |  2 |
+| -0.2  |   1   |  3 |
+| -1.2  |   1   |  4 |
+| -0.1  |   1   |  5 |
+|  3.4  |   1   |  6 |
+
 
 ```R
 # Extraindo dados de um dos grupos
@@ -107,6 +116,20 @@ shapiro.test(sleep$extra[grupo_um])
 shapiro.test(sleep$extra[!grupo_um])
 ```
 
+| Test Data                           | Result           |
+|-------------------------------------|------------------|
+| Shapiro-Wilk normality test        |                  |
+| Variable:                            | sleep$extra[grupo_um]|
+| W                                   | 0.93             |
+| p-value                             | 0.4              |
+
+| Test Data                           | Result           |
+|-------------------------------------|------------------|
+| Shapiro-Wilk normality test        |                  |
+| Variable:                            | sleep$extra[!grupo_um]|
+| W                                   | 0.92             |
+| p-value                             | 0.4              |
+
 Como p-value = 0.4 \> 0.05 para ambos os grupos, então falhamos em rejeitar a H0. Portanto, podemos assumir que os dados seguem uma distribuição normal.
 
 Não há significância estatística para rejeitar H0. Não pode-se dizer que aceitamos H0, não tem como afirmar categoricamente que H0 é verdadeira. Pra isso precisamos realizar outros testes estatísticas. Neste caso, vamos considerar que H0 pode ser validada, ou seja, que H0 segue uma distribuição normal.
@@ -135,6 +158,9 @@ Na validação da suposição 4 já identificamos que os dados estão normalment
 # Verificando se há valores ausentes
 colSums(is.na(sleep))
 ```
+| extra | group | ID |
+|-------|-------|----|
+|   0   |   0   |  0 |
 
 ```R
 # Analisando as estatísticas
@@ -142,11 +168,29 @@ dt <- data.table::data.table(sleep)
 dt[,.(Total = .N, Media = mean(extra), Sd = sd(extra)), by = group]
 ```
 
+| group | Total | Media | Sd   |
+|-------|-------|-------|------|
+| 1     | 10    | 0.75  | 1.789|
+| 2     | 10    | 2.33  | 2.002|
+
+
 ```R
 # Aplicando o teste F
 teste_f <- var.test(extra ~ group, data = sleep)
 teste_f
 ```
+|   Test Data      |    Result         |
+|-------------------|------------------|
+| **F test to compare two variances** |                  |
+| Data              | extra by group   |
+| F                 | 0.8              |
+| num df            | 9                |
+| denom df          | 9                |
+| p-value           | 0.7              |
+| Alternative hypothesis | true ratio of variances is not equal to 1 |
+| 95 percent confidence interval | 0.1983 to 3.2141 |
+| Sample estimates  | ratio of variances = 0.7983 |
+
 
 valor-p \> 0.05. Portanto, falhamos em reiejtar H0, não há diferença significativa entre as médias dos dois grupos. Portanto, as médias possuem a mesma variância.
 
@@ -167,5 +211,16 @@ teste_t <- t.test(extra ~ group, data = sleep,
 teste_t
 # VAR.QUAL = TRUE, pois realizamos a validação com o teste F já, anteriormente.
 ```
+|         Test Data         |        Result          |
+|------------------------------|------------------|
+| **Two Sample t-test**        |                  |
+| Data                         | extra by group   |
+| t                            | -1.9             |
+| df                           | 18               |
+| p-value                      | 0.08             |
+| Alternative hypothesis       | true difference in means between group 1 and group 2 is not equal to 0 |
+| 95 percent confidence interval | -3.3639 to 0.2039 |
+| Sample estimates             | mean in group 1: 0.75, mean in group 2: 2.33 |
+
 
 valor-p = 0.08 \> 0.05. Portanto, falhamos em rejeitar a H0! Ou, podemos concluir que os 2 grupos não tem diferença significativa entre os medicamentos aplicados para tratar distúrbios de sono.
